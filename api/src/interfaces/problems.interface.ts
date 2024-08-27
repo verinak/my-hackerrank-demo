@@ -1,5 +1,6 @@
 import { ObjectId } from 'mongodb';
 import { ITestCase } from './test-case.interface';
+import { ISubmission } from './submissions.interface';
 
 export interface IProblem {
     _id?: ObjectId;
@@ -9,4 +10,5 @@ export interface IProblem {
     subdomain?: string;
     test_cases: ITestCase[];
     solved_count?: number;
+    submissions?: ISubmission[];
 }

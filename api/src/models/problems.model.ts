@@ -15,17 +15,80 @@ export const getAllProblems = async (): Promise<IProblem[]> => {
 }
 
 // get problems by topic
-export const getProblemsByTopic = async (topic: string): Promise<IProblem[]> => {
+// export const getProblemsByTopic = async (topic: string): Promise<IProblem[]> => {
+//     const problemsCollection = getProblemsCollection();
+//     const result = await problemsCollection.find({ topic: topic }).toArray();
+//     return result;
+// }
+
+export const getProblemsByTopic = async (topic: string, userId: string): Promise<IProblem[]> => {
     const problemsCollection = getProblemsCollection();
-    const result = await problemsCollection.find({ topic: topic }).toArray();
-    return result;
+    let id = new ObjectId(userId)
+
+    const pipeline = [
+        { $match: { topic: topic } },
+        { $lookup: {
+            from: "submissions",
+            localField: "_id",
+            foreignField: "problem_id",
+            pipeline: [
+                { $match: { $and: [
+                    { $expr: { $eq: ["$user_id", id ] } },
+                    { $expr: { $eq: ["$status", true] } }
+                    ]}
+                }
+            ],
+            as: "userSubmissions"
+        } },
+        { $set: { solved_count: {$size: "$userSubmissions"}, } },
+        // { $unset: "userSubmissions"}
+    ]
+
+    // console.log(JSON.stringify(pipeline, null, 2));
+
+    const result = await problemsCollection.aggregate(pipeline).toArray();    
+
+    let problem: IProblem[];
+    if(result) {
+        problem = result as IProblem[];
+    }
+    else {
+        problem = [];
+    }
+
+    return problem;
 }
 
 // get problem by id
-export const getProblemById = async (id: string): Promise<IProblem | null> => {
+export const getProblemById = async (id: string, userId: string): Promise<IProblem | null> => {
     const problemsCollection = getProblemsCollection();
-    const result = await problemsCollection.findOne({ _id: new ObjectId(id) });
-    return result;
+
+    const pipeline = [
+        { $match: { _id: new ObjectId(id) } },
+        { $lookup: {
+            from: "submissions",
+            localField: "_id",
+            foreignField: "problem_id",
+            "pipeline": [
+                { "$match": { $expr: { $eq: ["$user_id", new ObjectId(userId)] } } }
+            ],
+            as: "userSubmissions"
+            }
+        },
+    ]
+
+    const result = await problemsCollection.aggregate(pipeline).next();
+    
+    // 34an el typescript 7omar
+    let problem: IProblem | null;
+    if(result) {
+        problem = result as IProblem;
+    }
+    else {
+        problem = null;
+    }
+
+    return problem;
 }
 
 // create problem

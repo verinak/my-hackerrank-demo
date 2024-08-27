@@ -15,19 +15,9 @@ export const getProblems = async (req: Request, res: Response<IApiResponse<IProb
         let topic = req.params.topic;
         topic = (req.params.topic).charAt(0).toUpperCase() + topic.slice(1); // capitalize first letter
 
-        const problems: IProblem[] = await getProblemsByTopic(topic);
+        const problems: IProblem[] = await getProblemsByTopic(topic, req.params.userId);
         if(problems.length !== 0) {
             res.status(200).json(ResponseHelper.ok<IProblem[]>(problems));
-        }
-        else {
-            res.status(404).json(ResponseHelper.notFound());
-        }
-    }
-    else if (req.params.id) {
-        // get problem by id
-        const problem: IProblem | null = await getProblemById(req.params.id);
-        if(problem) {
-            res.status(200).json(ResponseHelper.ok<IProblem>(problem));
         }
         else {
             res.status(404).json(ResponseHelper.notFound());
@@ -43,8 +33,20 @@ export const getProblems = async (req: Request, res: Response<IApiResponse<IProb
             res.status(404).json(ResponseHelper.notFound());
         }
     }
-
 }
+
+// get problem details
+export const getProblemDetails = async (req: Request, res: Response<IApiResponse<IProblem | null>, {}>) => {
+    const problem: IProblem | null = await getProblemById(req.params.id, req.params.userId);
+    if(problem) {
+        res.status(200).json(ResponseHelper.ok<IProblem>(problem));
+    }
+    else {
+        res.status(404).json(ResponseHelper.notFound());
+    }
+}
+
+// create problem by id
 export const addProblem = async (req: Request<{}, {}, IProblem, {}>, res: Response<IApiResponse<ObjectId | null>, {}>): Promise<void> => {
     try {
         const newProblem: IProblem = req.body;
@@ -57,6 +59,7 @@ export const addProblem = async (req: Request<{}, {}, IProblem, {}>, res: Respon
     }
 }
 
+// delete problem by i
 export const deleteProblem = async (req: Request<{id: string}, {}, {}, {}>, res: Response<IApiResponse<number | null>, {}>): Promise<void> => {
     try {
         const result: number = await deleteProblemById(req.params.id);
@@ -67,6 +70,7 @@ export const deleteProblem = async (req: Request<{id: string}, {}, {}, {}>, res:
     }
 }
 
+// update problem by id
 export const updateProblem = async (req: Request<{id: string}, {}, IProblem, {}>, res: Response<IApiResponse<number | null>, {}>): Promise<void> => {
     try {
         const result: number = await updateProblemById(req.params.id, req.body);
