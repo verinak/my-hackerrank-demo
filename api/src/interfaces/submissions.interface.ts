@@ -5,9 +5,10 @@ export interface ISubmission {
     user_id: ObjectId,
     problem_id: ObjectId,
     code: string,
-    language: {
+    language?: {
         name: string,
         version: string
     },
-    status: boolean
+    status?: boolean;
+    submit_date?: Date;
 }

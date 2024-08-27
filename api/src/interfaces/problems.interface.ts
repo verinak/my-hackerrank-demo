@@ -6,5 +6,7 @@ export interface IProblem {
     content: string;
     difficulty?: string;
     topic?: string;
-    test_cases: ITestCase[]
+    subdomain?: string;
+    test_cases: ITestCase[];
+    solved_count?: number;
 }
