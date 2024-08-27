@@ -1,4 +1,11 @@
 import { Response, Router, Request } from "express";
-import { v4 as uuidv4 } from "uuid";
+import { getSubmissions , getUserSubmissions, addSubmission} from '../controllers/submissions.controller'
 
 export const submissionsRouter = Router();
+
+submissionsRouter.route("/")
+    .get(getSubmissions)
+    .post(getUserSubmissions);
+
+submissionsRouter.route("/create/")
+    .post(addSubmission);

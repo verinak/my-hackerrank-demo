@@ -14,7 +14,7 @@ app.use(express.json());
 // define routes
 app.use("/users", usersRouter);
 app.use("/problems", problemsRouter);
-// app.use("/submissions", submissionsRouter);
+app.use("/submissions", submissionsRouter);
 
 
 // connect to database
