@@ -6,6 +6,7 @@ import { IProblem } from '../interfaces/problems.interface';
 import { ITestCase } from '../interfaces/test-case.interface';
 import { IApiResponse } from '../interfaces/api-response.interface';
 import { ResponseHelper } from '../helpers/api-response.helper';
+import { decodeToken } from '../helpers/jwt-auth.helper';
 
 // get problems
 export const getProblems = async (req: Request, res: Response<IApiResponse<IProblem[] | IProblem | null>, {}>) => {
@@ -15,7 +16,9 @@ export const getProblems = async (req: Request, res: Response<IApiResponse<IProb
         let topic = req.params.topic;
         topic = (req.params.topic).charAt(0).toUpperCase() + topic.slice(1); // capitalize first letter
 
-        const problems: IProblem[] = await getProblemsByTopic(topic, req.params.userId);
+        const decodedToken = decodeToken(req)!;
+
+        const problems: IProblem[] = await getProblemsByTopic(topic, decodedToken.id);
         if(problems.length !== 0) {
             res.status(200).json(ResponseHelper.ok<IProblem[]>(problems));
         }
@@ -37,7 +40,9 @@ export const getProblems = async (req: Request, res: Response<IApiResponse<IProb
 
 // get problem details
 export const getProblemDetails = async (req: Request, res: Response<IApiResponse<IProblem | null>, {}>) => {
-    const problem: IProblem | null = await getProblemById(req.params.id, req.params.userId);
+    const decodedToken = decodeToken(req)!;
+
+    const problem: IProblem | null = await getProblemById(req.params.id, decodedToken.id);
     if(problem) {
         res.status(200).json(ResponseHelper.ok<IProblem>(problem));
     }
