@@ -1,4 +1,6 @@
 import express from "express";
+import dotenv from "dotenv";
+
 
 import { usersRouter } from "./routes/users.route";
 import { problemsRouter } from "./routes/problems.route";
@@ -6,8 +8,13 @@ import { submissionsRouter } from "./routes/submissions.route";
 
 import { connectToDatabase } from "./helpers/database.helper";
 
-const PORT = 3000;
-const MONGO_URI = "mongodb://127.0.0.1:27017/HackerrankDemo"
+// .env variables
+dotenv.config();
+
+const PORT = process.env.PORT || 3000;
+const MONGO_URI = process.env.MONGO_URI as string;
+
+// create app
 const app = express();
 app.use(express.json());
 

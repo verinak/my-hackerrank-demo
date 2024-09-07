@@ -8,7 +8,7 @@ import { IUser } from '../interfaces/users.interface';
 import { IApiResponse } from '../interfaces/api-response.interface';
 import { ResponseHelper } from '../helpers/api-response.helper';
 
-const saltRounds = 10; // Typically a value between 10 and 12
+const saltRounds = process.env.SALT_ROUNDS || 10;
 
 // get all
 export const getAll = async (req: Request, res: Response<IApiResponse<IUser[] | null>, {}>) => {
