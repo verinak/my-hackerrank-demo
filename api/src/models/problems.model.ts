@@ -41,7 +41,7 @@ export const getProblemsByTopic = async (topic: string, userId: string): Promise
             as: "userSubmissions"
         } },
         { $set: { solved_count: {$size: "$userSubmissions"}, } },
-        // { $unset: "userSubmissions"}
+        { $unset: "userSubmissions"}
     ]
 
     // console.log(JSON.stringify(pipeline, null, 2));
