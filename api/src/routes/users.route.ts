@@ -1,5 +1,5 @@
 import { Response, Router, Request } from "express";
-import { getAll, createNewUser, getRegisteredUser } from '../controllers/users.controller'
+import { getAll, createNewUser, getRegisteredUser, updatePassword} from '../controllers/users.controller'
 
 export const usersRouter = Router();
 
@@ -10,5 +10,6 @@ usersRouter.route("/new")
     .post(createNewUser);
 
 usersRouter.route("/registered")
-    .post(getRegisteredUser);
+    .post(getRegisteredUser)
+    .patch(updatePassword);
 

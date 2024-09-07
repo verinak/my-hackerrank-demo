@@ -21,10 +21,10 @@ export const getUserById = async (id: string): Promise<IUser | null> => {
     return result;
 }
 
-// get user by email and password
-export const getUserByCredentials = async (email: string, password: string): Promise<IUser | null> => {
+// get user by email
+export const getUserByEmail = async (email: string): Promise<IUser | null> => {
     const usersCollection = getUsersCollection();
-    const result = await usersCollection.findOne({ email: email, password: password });
+    const result = await usersCollection.findOne({ email: email });
     return result;
 }
 
@@ -39,6 +39,24 @@ export const createUser = async (user: IUser): Promise<ObjectId> => {
     }
     else {
         throw new Error('Insert operation was not acknowledged');
+    }
+}
+
+// get user by email
+export const updateUserPassword = async (userId: string, newPassword: string): Promise<number | null> => {
+    const usersCollection = getUsersCollection();
+    const result = await usersCollection.updateOne(
+        { _id: new ObjectId(userId) },
+        { $set: { password: newPassword} }
+    );
+
+    console.log(result);
+    
+    if (result.acknowledged && result.modifiedCount != 0) {
+        return result.modifiedCount;
+    }
+    else {
+        throw new Error('Update operation was not acknowledged');
     }
 }
 

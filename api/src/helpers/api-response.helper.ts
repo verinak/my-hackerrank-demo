@@ -2,7 +2,7 @@ import { IApiResponse } from "../interfaces/api-response.interface";
 
 export abstract class ResponseHelper {
 
-  static ok<T>(data: T, message: string = "success"): IApiResponse<T> {
+  static ok<T>(data: T, message: string = "Success"): IApiResponse<T> {
     return {
       message: message,
       data: data,
@@ -11,7 +11,7 @@ export abstract class ResponseHelper {
     };
   }
 
-  static created<T>(data: T, message: string = "success"): IApiResponse<T> {
+  static created<T>(data: T, message: string = "Success"): IApiResponse<T> {
     return {
       message: message,
       data: data,
@@ -20,7 +20,8 @@ export abstract class ResponseHelper {
     };
   }
 
-  static notFound(message: string = "not found"): IApiResponse {
+
+  static notFound(message: string = "Not Found"): IApiResponse {
     return {
       message: message,
       status: 404,
@@ -28,10 +29,34 @@ export abstract class ResponseHelper {
     };
   }
 
-  static badRequest(message: string = "bad request"): IApiResponse {
+  static badRequest(message: string = "Bad Request"): IApiResponse {
     return {
       message: message,
       status: 400,
+      success: false,
+    };
+  }
+
+  static unauthorized(message: string = "Unauthorized"): IApiResponse {
+    return {
+      message: message,
+      status: 401,
+      success: false,
+    };
+  }
+
+  static forbidden(message: string = "Forbidden"): IApiResponse {
+    return {
+      message: message,
+      status: 403,
+      success: false,
+    };
+  }
+
+  static internalServerErorr(message: string = "Interal Server Error"): IApiResponse {
+    return {
+      message: message,
+      status: 500,
       success: false,
     };
   }
