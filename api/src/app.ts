@@ -1,5 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
+dotenv.config();
 
 
 import { usersRouter } from "./routes/users.route";
@@ -8,14 +9,14 @@ import { submissionsRouter } from "./routes/submissions.route";
 
 import { connectToDatabase } from "./helpers/database.helper";
 
-// .env variables
-dotenv.config();
-
+// get .env variables
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI as string;
 
 // create app
 const app = express();
+
+// global middlewares
 app.use(express.json());
 
 // define routes

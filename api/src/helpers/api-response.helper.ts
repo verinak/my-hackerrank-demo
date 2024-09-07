@@ -53,7 +53,7 @@ export abstract class ResponseHelper {
     };
   }
 
-  static internalServerErorr(message: string = "Interal Server Error"): IApiResponse {
+  static internalServerError(message: string = "Interal Server Error"): IApiResponse {
     return {
       message: message,
       status: 500,
