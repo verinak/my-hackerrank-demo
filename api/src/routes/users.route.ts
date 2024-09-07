@@ -1,5 +1,5 @@
 import { Response, Router, Request } from "express";
-import { getAll, createNewUser, getRegisteredUser, updatePassword} from '../controllers/users.controller'
+import { getAll, createNewUser, getRegisteredUser, updatePassword, getUserData} from '../controllers/users.controller'
 import { verifyToken, verifyAdmin } from "../middlewares/auth.middleware";
 
 export const usersRouter = Router();
@@ -12,5 +12,6 @@ usersRouter.route("/new")
 
 usersRouter.route("/registered")
     .post(getRegisteredUser)
+    .get(verifyToken, getUserData)
     .patch(verifyToken, updatePassword);
 

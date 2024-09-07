@@ -90,6 +90,27 @@ export const getAll = async (req: Request, res: Response<IApiResponse<IUser[] | 
     }
 }
 
+// get user data
+export const getUserData = async (req: Request, res: Response<IApiResponse<{username: string, email: string} | null>, {}>): Promise<void> => {
+    const decodedToken = decodeToken(req);
+    if(!decodedToken) {
+        res.status(401).json(ResponseHelper.unauthorized("Access denied. No token provided."));
+        return;
+    }
+
+    const user = await getUserById(decodedToken.id);
+    if(!user) {
+        res.status(404).json(ResponseHelper.notFound());
+        return;
+    }
+
+    const {username, email} = user;
+    res.status(200).json(ResponseHelper.ok<{username: string, email: string}>({username, email}));
+
+}
+
+
+
 // change user password
 export const updatePassword = async (req: Request<{}, {}, {_id: string, password: string}, {}>, res: Response): Promise<void> => {
     // decode token
