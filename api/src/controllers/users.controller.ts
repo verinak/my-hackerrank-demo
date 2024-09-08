@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import { Request, Response } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import { ObjectId } from 'mongodb';
 
 import { getAllUsers, getUserById, getUserByEmail, createUser, updateUserPassword } from '../models/users.model'
@@ -11,43 +11,45 @@ import { generateToken, decodeToken } from '../helpers/jwt-auth.helper';
 const saltRounds = Number(process.env.SALT_ROUNDS) || 10;
 
 // sign up
-export const createNewUser = async (req: Request<{}, {}, IUser, {}>, res: Response<IApiResponse<{token: string} | null>, {}>): Promise<void> => {
+export const createNewUser = async (req: Request<{}, {}, IUser, {}>, res: Response , next: NextFunction) => {
+    const newUser: IUser = req.body; // get user data from request body
+    // check that user is not empty and contains all credentials
+    if (!newUser || !newUser.email || !newUser.password || !newUser.username) {
+        return res.status(400).json(ResponseHelper.badRequest("Invalid user data."));
+    }
+
+    // if a user is registered with this email, return 400 bad request
+    const oldUser: IUser | null = await getUserByEmail(newUser.email);
+    if (oldUser) {
+        return res.status(400).json(ResponseHelper.badRequest("Email is already registered."));
+    }
+
     try {
-        const newUser: IUser = req.body;
-
-        // if a user is registered with this email, return 400 bad request
-        const oldUser: IUser | null = await getUserByEmail(newUser.email);
-        if (oldUser) {
-            res.status(400).json(ResponseHelper.badRequest("Email is already registered."));
-            return;
-        }
-
         // Hash the password
         const hashedPassword = await bcrypt.hash(newUser.password, saltRounds);
-        newUser.password = hashedPassword;
-        
+        const newUserHashed = {...newUser};
+        newUserHashed.password = hashedPassword;
         // insert user in database
-        const result: ObjectId = await createUser(newUser);
-
-        // generate token
-        const token = generateToken({id: result.toString(), role: "user"});
-        res.status(201).json(ResponseHelper.created<{token: string}>({token: token}));
-
+        const result: ObjectId = await createUser(newUserHashed);
+        next(); // login function
     }
-    catch(err) {
-        res.status(500).json(ResponseHelper.internalServerError(`An error occured: ${err}`));
+    catch (err) {
+        return res.status(500).json(ResponseHelper.internalServerError("An error occured. Unable to create user."));
     }
 }
 
 // login
-export const getRegisteredUser = async (req: Request<{}, {}, {email: string, password: string}, {}>, res: Response<IApiResponse<{ token: string } | null>, {}>): Promise<void> => {
+export const getRegisteredUser = async (req: Request<{}, {}, { email: string, password: string }, {}>, res: Response<IApiResponse<{ token: string } | null>, {}>) => {
+    // get user data from request body
     const email: string = req.body.email;
     const password: string = req.body.password;
-
-    // get user by email
-    const user: IUser | null = await getUserByEmail(email);
+    // check that email and password are not empty
+    if (!email || !password) {
+        return res.status(400).json(ResponseHelper.badRequest("Invalid user data."));
+    }
 
     // no user found with this email, return 404 Not Found
+    const user: IUser | null = await getUserByEmail(email);
     if (!user) {
         res.status(404).json(ResponseHelper.notFound());
         return;
@@ -55,75 +57,76 @@ export const getRegisteredUser = async (req: Request<{}, {}, {email: string, pas
 
     // user found, compare hashed passwords
     try {
-        // compare passwords
         const isMatch = await bcrypt.compare(password, user.password);
-
         // incorrect password, return 401 unauthorized
         if (!isMatch) {
             res.status(401).json(ResponseHelper.unauthorized("Invalid password."));
             return;
         }
-        
-        // generate token
+
+        // for testing purposes, until admin feature is implemented in db
         let role = "user";
-        // for testing purposes, until admin feature are implemented
-        if(user.email == "verinamichelk@gmail.com") {
+        if (user.email == "verinamichelk@gmail.com") {
             role = "admin";
         }
-        const token = generateToken({id: user._id!.toString(), role: role});
-        res.status(200).json(ResponseHelper.ok<{token: string}>({token: token}));
+        // generate token
+        const token = generateToken({ id: user._id!.toString(), role: role });
+        return res.status(200).json(ResponseHelper.ok<{ token: string }>({ token: token }));
     }
     catch (err) {
-        res.status(500).json(ResponseHelper.internalServerError(`An error occured: ${err}`));
+        return res.status(500).json(ResponseHelper.internalServerError(`An error occured. Login failed.`));
     }
 
 }
 
 // get all
-export const getAll = async (req: Request, res: Response<IApiResponse<IUser[] | null>, {}>): Promise<void> => {
-    const users: IUser[] = await getAllUsers();
-    if(users.length !== 0) {
-        res.status(200).json(ResponseHelper.ok<IUser[]>(users));
+export const getAll = async (req: Request, res: Response<IApiResponse<IUser[] | null>, {}>) => {
+    const users: IUser[] = await getAllUsers(); // get all users
+    if (users.length === 0) {
+        // if array is empty, return 404 not found
+        return res.status(404).json(ResponseHelper.notFound());
     }
-    else {
-        res.status(404).json(ResponseHelper.notFound());
-    }
+        // array is not empty, return found users
+    return res.status(200).json(ResponseHelper.ok<IUser[]>(users));
+
 }
 
 // get user data
-export const getUserData = async (req: Request, res: Response<IApiResponse<{username: string, email: string} | null>, {}>): Promise<void> => {
-    const decodedToken = decodeToken(req)!;
-
+export const getUserData = async (req: Request, res: Response<IApiResponse<{ username: string, email: string } | null>, {}>) => {
+    const decodedToken = decodeToken(req); // decode token
+    
+    // get user details
     const user = await getUserById(decodedToken.id);
-    if(!user) {
-        res.status(404).json(ResponseHelper.notFound());
-        return;
+    if (!user) {
+        // if user is null, return 404 not found
+        return res.status(404).json(ResponseHelper.notFound());
     }
 
-    const {username, email} = user;
-    res.status(200).json(ResponseHelper.ok<{username: string, email: string}>({username, email}));
+    // user is not null, return username and email
+    const { username, email } = user;
+    return res.status(200).json(ResponseHelper.ok<{ username: string, email: string }>({ username, email }));
 
 }
 
-
-
 // change user password
-export const updatePassword = async (req: Request<{}, {}, {_id: string, password: string}, {}>, res: Response): Promise<void> => {
-    // decode token
-    const decodedToken = decodeToken(req)!;
-    
-    const userId: string = decodedToken.id;
-    const password: string = req.body.password;
+export const updatePassword = async (req: Request<{}, {}, { _id: string, password: string }, {}>, res: Response) => {
+    const decodedToken = decodeToken(req); // decode token
+    const userId: string = decodedToken.id; // get user id from token
+    const password: string = req.body.password; // get password from request body
+    // check that password is not empty
+    if (!password) {
+        return res.status(400).json(ResponseHelper.badRequest("Invalid user data."));
+    }
 
     try {
         // Hash the password
         const hashedPassword = await bcrypt.hash(password, saltRounds);
         const result: number | null = await updateUserPassword(userId, hashedPassword);
 
-        res.status(200).json(ResponseHelper.ok<Object>({updatedCount: result}));
+        return res.status(200).json(ResponseHelper.ok<Object>({ updatedCount: result }));
     }
     catch (err) {
-        res.status(500).json(ResponseHelper.internalServerError(`An error occured: ${err}`));
+        return res.status(500).json(ResponseHelper.internalServerError(`An error occured: ${err}`));
     }
 
 }

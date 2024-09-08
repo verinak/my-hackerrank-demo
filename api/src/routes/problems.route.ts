@@ -1,5 +1,5 @@
 import { Response, Router, Request } from "express";
-import { getProblems, getProblemDetails , addProblem, deleteProblem, updateProblem } from '../controllers/problems.controller'
+import { getAll, getProblems, getProblemDetails , addProblem, deleteProblem, updateProblem } from '../controllers/problems.controller'
 import { verifyToken, verifyAdmin } from "../middlewares/auth.middleware";
 
 export const problemsRouter = Router();
@@ -8,7 +8,7 @@ export const problemsRouter = Router();
 problemsRouter.use(verifyToken);
 
 problemsRouter.route("/")
-    .get(getProblems) // 7asa eni 3yza a4il el get all problems di..
+    .get(getAll) // 7asa eni 3yza a4il el get all problems di..
     .post(verifyAdmin, addProblem);
 
 problemsRouter.route("/topic/:topic")

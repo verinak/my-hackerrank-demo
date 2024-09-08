@@ -5,7 +5,7 @@ import { IUserToken } from '../interfaces/auth-token.interface';
 
 export const generateToken = (user: IUserToken): string => {
     // get .env variables
-    const secretKey = process.env.JWT_SECRET as string;
+    const secretKey = process.env.JWT_SECRET!;
     const options = {
         expiresIn: process.env.JWT_EXPIRES_IN,
     }
@@ -14,14 +14,11 @@ export const generateToken = (user: IUserToken): string => {
     return token;
 };
 
-export const decodeToken = (req: Request): IUserToken | undefined => {
+export const decodeToken = (req: Request): IUserToken => {
+    // assuming that verifyToken middleware was used first
     const token = req.header("authorization")?.split(" ")[1];
-
-    if (!token) {
-        return;
-    }
-
-    const decodedToken = <IUserToken>jwt.decode(token);
+    
+    const decodedToken = <IUserToken>jwt.decode(token!);
     return decodedToken;
 };
 

@@ -50,7 +50,7 @@ export const updateUserPassword = async (userId: string, newPassword: string): P
         { $set: { password: newPassword} }
     );
 
-    console.log(result);
+    // console.log(result);
     
     if (result.acknowledged && result.modifiedCount != 0) {
         return result.modifiedCount;

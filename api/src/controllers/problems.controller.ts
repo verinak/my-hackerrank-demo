@@ -3,85 +3,98 @@ import { ObjectId } from 'mongodb';
 
 import { getAllProblems, getProblemsByTopic, getProblemById, createProblem, deleteProblemById, updateProblemById } from '../models/problems.model'
 import { IProblem } from '../interfaces/problems.interface';
-import { ITestCase } from '../interfaces/test-case.interface';
 import { IApiResponse } from '../interfaces/api-response.interface';
 import { ResponseHelper } from '../helpers/api-response.helper';
 import { decodeToken } from '../helpers/jwt-auth.helper';
 
-// get problems
-export const getProblems = async (req: Request, res: Response<IApiResponse<IProblem[] | IProblem | null>, {}>) => {
-
-    if(req.params.topic) {
-        // get problems by topic
-        let topic = req.params.topic;
-        topic = (req.params.topic).charAt(0).toUpperCase() + topic.slice(1); // capitalize first letter
-
-        const decodedToken = decodeToken(req)!;
-
-        const problems: IProblem[] = await getProblemsByTopic(topic, decodedToken.id);
-        if(problems.length !== 0) {
-            res.status(200).json(ResponseHelper.ok<IProblem[]>(problems));
-        }
-        else {
-            res.status(404).json(ResponseHelper.notFound());
-        }
+// get all problems
+export const getAll = async (req: Request, res: Response<IApiResponse<IProblem[] | null>, {}>) => {
+    // get all problems
+    const problems: IProblem[] = await getAllProblems();
+    if(problems.length === 0) {
+        // if array is empty, return 404 not found
+        return res.status(404).json(ResponseHelper.notFound());
     }
-    else {
-        // get all problems
-        const problems: IProblem[] = await getAllProblems();
-        if(problems.length !== 0) {
-            res.status(200).json(ResponseHelper.ok<IProblem[]>(problems));
-        }
-        else {
-            res.status(404).json(ResponseHelper.notFound());
-        }
+    // array is not empty, return found problems
+    return res.status(200).json(ResponseHelper.ok<IProblem[]>(problems));
+
+}
+
+// get problems by topic
+export const getProblems = async (req: Request, res: Response<IApiResponse<IProblem[] | null>, {}>) => {
+    let topic = req.params.topic; // get topic from path parameters
+    topic = (req.params.topic).charAt(0).toUpperCase() + topic.slice(1); // capitalize first letter
+    
+    const decodedToken = decodeToken(req); // decode token
+
+    // get problems by topic
+    const problems: IProblem[] = await getProblemsByTopic(topic, decodedToken.id);
+    if(problems.length === 0) {
+        // if array is empty, return 404 not found
+        return res.status(404).json(ResponseHelper.notFound());
     }
+    // array is not empty, return found problems
+    return res.status(200).json(ResponseHelper.ok<IProblem[]>(problems));
+
 }
 
 // get problem details
 export const getProblemDetails = async (req: Request, res: Response<IApiResponse<IProblem | null>, {}>) => {
-    const decodedToken = decodeToken(req)!;
+    const decodedToken = decodeToken(req); // decode token
 
+    // get problem by problem id
     const problem: IProblem | null = await getProblemById(req.params.id, decodedToken.id);
-    if(problem) {
-        res.status(200).json(ResponseHelper.ok<IProblem>(problem));
+    if(!problem) {
+        // if problem is null, return 404 not found
+        return res.status(404).json(ResponseHelper.notFound());
     }
-    else {
-        res.status(404).json(ResponseHelper.notFound());
-    }
+    // problem is not null, return found problem
+    return res.status(200).json(ResponseHelper.ok<IProblem>(problem));
+
 }
 
 // create problem by id
-export const addProblem = async (req: Request<{}, {}, IProblem, {}>, res: Response<IApiResponse<ObjectId | null>, {}>): Promise<void> => {
-    try {
-        const newProblem: IProblem = req.body;
-        const result: ObjectId = await createProblem(newProblem);
+export const addProblem = async (req: Request<{}, {}, IProblem, {}>, res: Response<IApiResponse<ObjectId | null>, {}>) => {
+    const newProblem: IProblem = req.body; // get problem data from request body
+    // check that problem is not empty
+    if (!newProblem) {
+        return res.status(400).json(ResponseHelper.badRequest("Invalid problem data."));
+    }
 
-        res.status(201).json(ResponseHelper.created<ObjectId>(result));
+    try {
+        // add problem to database
+        const result: ObjectId = await createProblem(newProblem);
+        return res.status(201).json(ResponseHelper.created<ObjectId>(result));
     }
     catch(error) {
-        res.status(400).json(ResponseHelper.badRequest("bad request. unable to create problem."));
+        return res.status(500).json(ResponseHelper.internalServerError("An error occured. Unable to create problem."));
     }
 }
 
-// delete problem by i
-export const deleteProblem = async (req: Request<{id: string}, {}, {}, {}>, res: Response<IApiResponse<number | null>, {}>): Promise<void> => {
+// delete problem by id
+export const deleteProblem = async (req: Request<{id: string}, {}, {}, {}>, res: Response<IApiResponse<number | null>, {}>) => {
     try {
         const result: number = await deleteProblemById(req.params.id);
-        res.status(200).json(ResponseHelper.ok<number>(result));
+        return res.status(200).json(ResponseHelper.ok<number>(result));
     }
     catch(error) {
-        res.status(400).json(ResponseHelper.badRequest("bad request. unable to delete problem."));
+        return res.status(500).json(ResponseHelper.internalServerError("An error occured. Unable to delete problem."));
     }
 }
 
 // update problem by id
-export const updateProblem = async (req: Request<{id: string}, {}, IProblem, {}>, res: Response<IApiResponse<number | null>, {}>): Promise<void> => {
+export const updateProblem = async (req: Request<{id: string}, {}, IProblem, {}>, res: Response<IApiResponse<number | null>, {}>) => {
+    const newProblem: IProblem = req.body; // get problem data from request body
+    // check that problem is not empty
+    if (!newProblem) {
+        return res.status(400).json(ResponseHelper.badRequest("Invalid problem data."));
+    }
     try {
-        const result: number = await updateProblemById(req.params.id, req.body);
-        res.status(200).json(ResponseHelper.ok<number>(result));
+        // update problem in database
+        const result: number = await updateProblemById(req.params.id, newProblem);
+        return res.status(200).json(ResponseHelper.ok<number>(result));
     }
     catch(error) {
-        res.status(400).json(ResponseHelper.badRequest("bad request. unable to delete problem."));
+        return res.status(500).json(ResponseHelper.internalServerError("An error occured. Unable to delete problem."));
     }
 }

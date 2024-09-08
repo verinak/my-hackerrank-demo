@@ -8,7 +8,7 @@ usersRouter.route("/")
     .get(verifyToken, verifyAdmin, getAll);
 
 usersRouter.route("/new")
-    .post(createNewUser);
+    .post(createNewUser, getRegisteredUser);
 
 usersRouter.route("/registered")
     .post(getRegisteredUser)
