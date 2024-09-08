@@ -57,7 +57,7 @@ export const getProblemDetails = async (req: Request, res: Response<IApiResponse
 export const addProblem = async (req: Request<{}, {}, IProblem, {}>, res: Response<IApiResponse<ObjectId | null>, {}>) => {
     const newProblem: IProblem = req.body; // get problem data from request body
     // check that problem is not empty
-    if (!newProblem) {
+    if (!newProblem || !newProblem.content || !newProblem.test_cases) {
         return res.status(400).json(ResponseHelper.badRequest("Invalid problem data."));
     }
 
@@ -86,7 +86,7 @@ export const deleteProblem = async (req: Request<{id: string}, {}, {}, {}>, res:
 export const updateProblem = async (req: Request<{id: string}, {}, IProblem, {}>, res: Response<IApiResponse<number | null>, {}>) => {
     const newProblem: IProblem = req.body; // get problem data from request body
     // check that problem is not empty
-    if (!newProblem) {
+    if (!newProblem || !newProblem.content || !newProblem.test_cases) {
         return res.status(400).json(ResponseHelper.badRequest("Invalid problem data."));
     }
     try {

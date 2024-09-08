@@ -20,15 +20,6 @@ export abstract class ResponseHelper {
     };
   }
 
-
-  static notFound(message: string = "Not Found"): IApiResponse {
-    return {
-      message: message,
-      status: 404,
-      success: false,
-    };
-  }
-
   static badRequest(message: string = "Bad Request"): IApiResponse {
     return {
       message: message,
@@ -49,6 +40,22 @@ export abstract class ResponseHelper {
     return {
       message: message,
       status: 403,
+      success: false,
+    };
+  }
+
+  static notFound(message: string = "Not Found"): IApiResponse {
+    return {
+      message: message,
+      status: 404,
+      success: false,
+    };
+  }
+
+  static methodNotAllowed(message: string = "Method Not Allowed"): IApiResponse {
+    return {
+      message: message,
+      status: 405,
       success: false,
     };
   }
