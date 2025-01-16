@@ -1,11 +1,13 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { ObjectId } from 'mongodb';
 
 import { getAllProblems, getProblemsByTopic, getProblemById, createProblem, deleteProblemById, updateProblemById } from '../models/problems.model'
+import { createSubmission } from '../models/submissions.model';
 import { IProblem } from '../interfaces/problems.interface';
 import { IApiResponse } from '../interfaces/api-response.interface';
 import { ResponseHelper } from '../helpers/api-response.helper';
 import { decodeToken } from '../helpers/jwt-auth.helper';
+import { ISubmission } from '../interfaces/submissions.interface';
 
 // get all problems
 export const getAll = async (req: Request, res: Response<IApiResponse<IProblem[] | null>, {}>) => {
@@ -21,9 +23,15 @@ export const getAll = async (req: Request, res: Response<IApiResponse<IProblem[]
 }
 
 // get problems by topic
-export const getProblems = async (req: Request, res: Response<IApiResponse<IProblem[] | null>, {}>) => {
-    let topic = req.params.topic; // get topic from path parameters
-    topic = (req.params.topic).charAt(0).toUpperCase() + topic.slice(1); // capitalize first letter
+export const getProblems = async (req: Request, res: Response<IApiResponse<IProblem[] | null>, {}>, next: NextFunction) => {
+    if(!req.query.topic) {
+        // no topic provided
+        // move to getAll middleware
+        return next();
+    }
+    let topic = req.query.topic as string; // get topic from query parameters
+
+    topic = topic.charAt(0).toUpperCase() + topic.slice(1); // capitalize first letter
     
     const decodedToken = decodeToken(req); // decode token
 
@@ -96,5 +104,34 @@ export const updateProblem = async (req: Request<{id: string}, {}, IProblem, {}>
     }
     catch(error) {
         return res.status(500).json(ResponseHelper.internalServerError("An error occured. Unable to delete problem."));
+    }
+}
+
+
+// add new submission
+export const addSubmission = async (req: Request<{id: string}, {}, ISubmission, {}>, res: Response<IApiResponse<ObjectId | null>, {}>) => {
+    const decodedToken = decodeToken(req); // decode token
+    const newSubmission: ISubmission = req.body; // get submission data from request body
+
+    // check that submission is not empty
+    if (!newSubmission || !newSubmission.code) {
+        return res.status(400).json(ResponseHelper.badRequest("Invalid submission data."));
+    }
+    // check that problem id is a valid object id
+    if (!ObjectId.isValid(req.params.id)) {
+        return res.status(400).json(ResponseHelper.badRequest("Invalid problem_id."));
+    }
+
+    newSubmission.problem_id = new ObjectId(req.params.id); // add problem id
+    newSubmission.user_id = new ObjectId(decodedToken.id); // add user id
+
+    try {
+        // add submission to database
+        const result: ObjectId = await createSubmission(newSubmission);
+        return res.status(201).json(ResponseHelper.created<ObjectId>(result));
+    }
+    catch (err) {
+        console.log(err);
+        return res.status(500).json(ResponseHelper.internalServerError("An error occured. Unable to create submission."));
     }
 }

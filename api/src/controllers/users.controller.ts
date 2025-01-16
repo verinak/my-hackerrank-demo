@@ -3,10 +3,12 @@ import { NextFunction, Request, Response } from 'express';
 import { ObjectId } from 'mongodb';
 
 import { getAllUsers, getUserById, getUserByEmail, createUser, updateUserPassword } from '../models/users.model'
+import { getAllUserSubmissions } from '../models/submissions.model'
 import { IUser } from '../interfaces/users.interface';
 import { IApiResponse } from '../interfaces/api-response.interface';
 import { ResponseHelper } from '../helpers/api-response.helper';
 import { generateToken, decodeToken } from '../helpers/jwt-auth.helper';
+import { ISubmission } from '../interfaces/submissions.interface';
 
 const saltRounds = Number(process.env.SALT_ROUNDS) || 10;
 
@@ -128,6 +130,21 @@ export const updatePassword = async (req: Request<{}, {}, { _id: string, passwor
     catch (err) {
         return res.status(500).json(ResponseHelper.internalServerError(`An error occured: ${err}`));
     }
+
+}
+
+// get user submissions
+// get all user submissions
+export const getUserSubmissions = async (req: Request<{}, IApiResponse<ISubmission[] | null>, {}, {}>, res: Response<IApiResponse<ISubmission[] | null>, {}>) => {
+    const decodedToken = decodeToken(req); // decode token
+    // get submissions by user id
+    const submissions: ISubmission[] = await getAllUserSubmissions(decodedToken.id);
+    if (submissions.length === 0) {
+        // if array is empty, return 404 not found
+        return res.status(404).json(ResponseHelper.notFound());
+    }
+    // array is not empty, return found submissions
+    return res.status(200).json(ResponseHelper.ok<ISubmission[]>(submissions));
 
 }
 

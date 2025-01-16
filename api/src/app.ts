@@ -5,7 +5,7 @@ dotenv.config();
 
 import { usersRouter } from "./routes/users.route";
 import { problemsRouter } from "./routes/problems.route";
-import { submissionsRouter } from "./routes/submissions.route";
+// import { submissionsRouter } from "./routes/submissions.route";
 
 import { undefinedRoute, jsonError, defaultError } from "./middlewares/error-handler.middleware";
 import { connectToDatabase } from "./helpers/database.helper";
@@ -23,7 +23,7 @@ app.use(express.json());
 // define routes
 app.use("/users", usersRouter);
 app.use("/problems", problemsRouter);
-app.use("/submissions", submissionsRouter);
+// app.use("/submissions", submissionsRouter);
 
 // error handeling middlewares
 app.use(undefinedRoute); // catch undefined routes and send 404 error

@@ -1,5 +1,5 @@
 import { Response, Router, Request } from "express";
-import { getSubmissions , getUserSubmissions, addSubmission} from '../controllers/submissions.controller'
+import { getSubmissions} from '../controllers/submissions.controller'
 import { verifyToken } from "../middlewares/auth.middleware";
 import { unsupportedMethod } from "../middlewares/error-handler.middleware";
 
@@ -9,8 +9,8 @@ submissionsRouter.use(verifyToken);
 
 submissionsRouter.route("/")
     // .get(getSubmissions) 
-    .get(getUserSubmissions)
-    .post(addSubmission)
+    // .get(getUserSubmissions)
+
     .all(unsupportedMethod); // send 405 method not allowed error for any other method
 
 // submissionsRouter.route("/create/")

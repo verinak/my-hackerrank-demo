@@ -1,5 +1,5 @@
 import { Response, Router, Request } from "express";
-import { getAll, getProblems, getProblemDetails , addProblem, deleteProblem, updateProblem } from '../controllers/problems.controller'
+import { getAll, getProblems, getProblemDetails , addProblem, deleteProblem, updateProblem, addSubmission} from '../controllers/problems.controller'
 import { verifyToken, verifyAdmin } from "../middlewares/auth.middleware";
 import { unsupportedMethod } from "../middlewares/error-handler.middleware";
 
@@ -9,17 +9,18 @@ export const problemsRouter = Router();
 problemsRouter.use(verifyToken);
 
 problemsRouter.route("/")
-    .get(getAll) // 7asa eni 3yza a4il el get all problems di..
-    .post(verifyAdmin, addProblem)
-    .all(unsupportedMethod); // send 405 method not allowed error for any other method
-
-problemsRouter.route("/topic/:topic")
-    .get(getProblems)
+    .get(getProblems, getAll) // get problems. possible query parameters: [topic].
+    .post(verifyAdmin, addProblem) // create new problem (admin only)
     .all(unsupportedMethod); // send 405 method not allowed error for any other method
 
 problemsRouter.route("/:id/")
-    .get(getProblemDetails)
-    .delete(verifyAdmin, deleteProblem)
-    .put(verifyAdmin, updateProblem)
+    .get(getProblemDetails) // get problem details
+    .delete(verifyAdmin, deleteProblem) // delete problem (admin only)
+    .put(verifyAdmin, updateProblem) // update problem (admin only)
     .all(unsupportedMethod); // send 405 method not allowed error for any other method
+
+problemsRouter.route("/:id/submissions")
+    .post(addSubmission) // make new submission to problem
+    .all(unsupportedMethod); // send 405 method not allowed error for any other method
+
 
