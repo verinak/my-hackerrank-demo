@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { ObjectId } from 'mongodb';
 
 import { getAllProblems, getProblemsByTopic, getProblemById, createProblem, deleteProblemById, updateProblemById } from '../models/problems.model'
-import { createSubmission } from '../models/submissions.model';
+import { createSubmission, getAllProblemSubmissions } from '../models/submissions.model';
 import { IProblem } from '../interfaces/problems.interface';
 import { IApiResponse } from '../interfaces/api-response.interface';
 import { ResponseHelper } from '../helpers/api-response.helper';
@@ -107,6 +107,18 @@ export const updateProblem = async (req: Request<{id: string}, {}, IProblem, {}>
     }
 }
 
+// get all submissions
+export const getProblemSubmissions = async (req: Request<{id: string}, {}, {}, {}>, res: Response<IApiResponse<ISubmission[] | null>, {}>) => {
+    // get all submissions
+    const submissions: ISubmission[] = await getAllProblemSubmissions(req.params.id);
+    if (submissions.length === 0) {
+        // if array is empty, return 404 not found
+        return res.status(404).json(ResponseHelper.notFound());
+    }
+    // array is not empty, return found submissions
+    return res.status(200).json(ResponseHelper.ok<ISubmission[]>(submissions));
+
+}
 
 // add new submission
 export const addSubmission = async (req: Request<{id: string}, {}, ISubmission, {}>, res: Response<IApiResponse<ObjectId | null>, {}>) => {

@@ -21,6 +21,13 @@ export const getAllUserSubmissions = async (id: string): Promise<ISubmission[]> 
     return result;
 }
 
+// get all problem submissions
+export const getAllProblemSubmissions = async (id: string): Promise<ISubmission[]> => {
+    const submissionsCollection = getSubmissionsCollection();
+    const result = await submissionsCollection.find({ problem_id: new ObjectId(id) }).toArray();
+    return result;
+}
+
 // create submission
 export const createSubmission = async (submission: ISubmission): Promise<ObjectId> => {
     const submissionsCollection = getSubmissionsCollection();
